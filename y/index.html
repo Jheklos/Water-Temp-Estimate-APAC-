@@ -1,0 +1,400 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estimate Water Temperature</title>
+    <script src="https://cdn.maptiler.com/maptiler-sdk-js/v1.1.1/maptiler-sdk.umd.js"></script>
+    <link href="https://cdn.maptiler.com/maptiler-sdk-js/v1.1.1/maptiler-sdk.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+
+    <script src="https://cdn.maptiler.com/maptiler-geocoding-control/v0.0.98/maptilersdk.umd.js"></script>
+    <link href="https://cdn.maptiler.com/maptiler-geocoding-control/v0.0.98/style.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <style>
+        .mapboxgl-popup {
+            max-width: 400px;
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        }
+    </style>
+    <div id="map"></div>
+
+    <script>
+        maptilersdk.config.apiKey = '1xKgXEastCKKMzEfPH39';
+        var map = new maptilersdk.Map({
+            container: 'map',
+            style: maptilersdk.MapStyle.STREETS,
+            center: [-40.321183, -7.977041],
+            zoom: 5
+        });
+
+        //search
+
+        const gc = new maptilersdkMaptilerGeocoder.GeocodingControl();
+
+        map.addControl(gc, 'top-left');
+        //search 
+
+        async function getTempRios(temp) {
+            const math = window.math; // Acessar a biblioteca math.js
+
+            // function relu(soma) {
+            // return soma.map(value => Math.max(0, value));
+            //  }
+            console.log(temp);
+
+
+            function relu(soma) {
+                for (let column = 0; column < soma.length; column++) {
+                    for (let row = 0; row < soma[column].length; row++) {
+                        if (soma[column][row] < 0) {
+                            soma[column][row] = 0;
+                        }
+                    }
+                }
+                return soma;
+            }
+
+
+            //const entrada = math.matrix([temp]);
+            const entrada = temp;
+
+            const x_mean = 27.829867986798682
+            const x_std = 2.2896495056180015
+            const y_std = 2.3490841700172416
+            const y_mean = 25.27095709570957
+
+
+            //const normalizar = entrada.subset(math.index(0)).map(x => (x - x_mean) / x_std);
+
+
+
+            const entradaNormalizada = (entrada - x_mean) / x_std
+
+            console.log(entradaNormalizada);
+
+            const entradas = [[entradaNormalizada], [1]];
+            console.log(entradas);
+
+
+            const pesos0 = math.matrix([
+                [-0.9895002, 1.04734819, -0.82615921, 0.16461904],
+                [0.80721539, -0.31487294, -0.75901312, 0.29473389]
+
+            ]);
+
+
+            const pesos1 = math.matrix([
+                [-0.56939617],
+                [0.1319823],
+                [0.47520941],
+                [1.13934481]
+            ]);
+
+            const bia1 = math.matrix([0.0118578]);
+
+
+            const camadaEntrada = entradas;
+
+            const somaSinapse0 = math.multiply(math.transpose(camadaEntrada), pesos0);
+            //console.log(somaSinapse0.toArray());
+
+            const camadaOculta = relu(somaSinapse0.toArray());
+            //console.log(camadaOculta);
+
+            const somaSinapse1 = math.add(math.multiply(camadaOculta, pesos1), bia1);
+            //console.log(somaSinapse1.toArray());
+
+            const valorSomaSinapse1 = somaSinapse1.toArray()[0];
+            const saidarevertida = (valorSomaSinapse1 * y_std) + y_mean;
+
+            //console.log(saidarevertida);
+            return saidarevertida.toFixed(2);
+
+
+        }
+
+        async function getTempReservatorios(temp) {
+            const math = window.math; // Acessar a biblioteca math.js
+
+            // function relu(soma) {
+            // return soma.map(value => Math.max(0, value));
+            //  }
+            console.log(temp);
+
+
+            function relu(soma) {
+                for (let column = 0; column < soma.length; column++) {
+                    for (let row = 0; row < soma[column].length; row++) {
+                        if (soma[column][row] < 0) {
+                            soma[column][row] = 0;
+                        }
+                    }
+                }
+                return soma;
+            }
+
+
+            //const entrada = math.matrix([temp]);
+            const entrada = temp;
+
+            const x_mean = 29.04201725997842
+            const x_std = 3.2512791846648366
+            const y_std = 2.5426507332823753
+            const y_mean = 27.19406688241638
+
+
+            //const normalizar = entrada.subset(math.index(0)).map(x => (x - x_mean) / x_std);
+
+
+
+            const entradaNormalizada = (entrada - x_mean) / x_std
+
+            //console.log(entradaNormalizada);
+
+            const entradas = [[entradaNormalizada], [1]];
+
+
+            const pesos0 = math.matrix([
+                [0.11407659, -0.26942306, 0.9517317, -0.87525028],
+                [0.67000814, 0.45852317, -0.40012957, 0.33023483]
+
+            ]);
+
+
+            const pesos1 = math.matrix([
+                [0.37805582],
+                [0.31631064],
+                [0.31751883],
+                [-0.82073256]
+            ]);
+
+            const bia1 = math.matrix([-0.05994019]);
+
+
+            const camadaEntrada = entradas;
+
+            const somaSinapse0 = math.multiply(math.transpose(camadaEntrada), pesos0);
+            //console.log(somaSinapse0.toArray());
+
+            const camadaOculta = relu(somaSinapse0.toArray());
+            //console.log(camadaOculta);
+
+            const somaSinapse1 = math.add(math.multiply(camadaOculta, pesos1), bia1);
+            //console.log(somaSinapse1.toArray());
+
+            const valorSomaSinapse1 = somaSinapse1.toArray()[0];
+            const saidarevertida = (valorSomaSinapse1 * y_std) + y_mean;
+
+            //console.log(saidarevertida);
+            return saidarevertida.toFixed(2);
+
+
+        }
+
+        async function sendinpults(lat, long, categoriawater) {  // add categoriawater
+
+
+            console.log(lat);
+            console.log(long);
+            console.log(categoriawater);
+            let temperaturaEstimada = 1;
+
+            try {
+                const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${lat},${long}?unitGroup=metric&key=UM5R6QGA4TVMYGUXR5MGZKWQF&contentType=json`;
+                const response = await fetch(url);
+
+                if (response.ok) {
+                    const dados = await response.json();
+
+                    const temp = dados.currentConditions.temp;
+                    //const humidity = dados.currentConditions.humidity;
+                    //const windspeed = dados.currentConditions.windspeed;
+                    //const solarradiation = dados.currentConditions.solarradiation;
+
+                    console.log(temp); // Imprime o valor da temperatura
+
+                    // Continue com o processamento dos dados conforme necessário
+                    // Chama a função getTemp() passando as variáveis como argumentos
+                    // if (categor == 0){ const temperaturaEstimada = await getTemp(temp);}else{const temperaturaEstimada = await getTempRios(temp)}
+
+                    if (categoriawater == 1) {
+                        temperaturaEstimada = await getTempReservatorios(temp);
+                        //console.log('aqui: '+ temperaturaEstimada);
+
+                    } else {
+                        temperaturaEstimada = await getTempRios(temp);
+
+                    }
+
+                    return temperaturaEstimada;
+
+                } else {
+                    throw new Error('Requisição inválida!');
+                }
+            } catch (error) {
+                console.error(error);
+            }
+
+        }
+
+
+        map.on('load', function () {
+
+            map.loadImage(
+                'https://i.imgur.com/YW5GjqO.png',
+                function (error, image) {
+                    if (error) throw error;
+                    map.addImage('custom-marker-1', image); // Use a unique name for the image
+
+                    // Load the second custom marker image
+                    map.loadImage(
+                        'https://i.imgur.com/MjQ9kQE.png',
+                        function (error, image) {
+                            if (error) throw error;
+                            map.addImage('custom-marker-0', image); // Use a unique name for the image
+
+
+
+                            const Model = [
+                                { categoria: 1, title: "Reservatório Algodões", long: -40.321183, lat: -7.977041, local: "Ouricuri", bacia: "Bacia Hidrográfica Brígida" }, { categoria: 1, title: "Reservatório Arcoverde/Riacho do Pau", long: -36.988304, lat: -8.55918, local: "Pedra", bacia: "Bacia Hidrográfica Ipanema" }, { categoria: 1, title: "Reservatório Barra do Juá", long: -38.073731, lat: -8.449128, local: "Floresta", bacia: "Bacia Hidrográfica Pajeú" }, { categoria: 1, title: "Reservatório Belo Jardim/Pedro Moura Jr", long: -36.374801, lat: -8.345831, local: "Belo Jardim", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 1, title: "Reservatório Bita", long: -35.805278, lat: -8.355833, local: "Cabo de Santo Agostinho", bacia: "Bacia Hidrográfica GL2" }, { categoria: 1, title: "Reservatório Bitury/Eng. Severino Guerra", long: -36.425833, lat: -8.310278, local: "Belo Jardim", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 1, title: "Reservatório Boa Vista", long: -39.053381, lat: -8.060485, local: "Salgueiro", bacia: "Bacia Hidrográfica Terra Nova" }, { categoria: 1, title: "Reservatório Bonitinho", long: -35.693917, lat: -8.471083, local: "Bonito", bacia: "Bacia Hidrográfica Sirinhaém" }, { categoria: 1, title: "Reservatório Botafogo", long: -35.034113, lat: -7.836526, local: "Igarassu", bacia: "Bacia Hidrográfica GL1" }, { categoria: 1, title: "Reservatório Brotas", long: -37.621507, lat: -7.74436, local: "Afogados da Ingazeira", bacia: "Bacia Hidrográfica Pajeú" }, { categoria: 1, title: "Reservatório Cachimbo", long: -39.77, lat: -7.9925, local: "Parnamirim", bacia: "Bacia Hidrográfica Brígida" }, { categoria: 1, title: "Reservatório Cachoeira II", long: -38.322421, lat: -7.974323, local: "Serra Talhada", bacia: "Bacia Hidrográfica Pajeú" }, { categoria: 1, title: "Reservatório Carpina", long: -35.337641, lat: -7.893897, local: "Lagoa do Carro", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 1, title: "Reservatório Chapéu", long: -39.568932, lat: -7.994032, local: "Parnamirim", bacia: "Bacia Hidrográfica Brígida" }, { categoria: 1, title: "Reservatório Chinelo", long: -37.788889, lat: -7.7825, local: "Carnaíba", bacia: "Bacia Hidrográfica Pajeú" }, { categoria: 1, title: "Reservatório Cursaí", long: -35.17568, lat: -7.879074, local: "Paudalho", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 1, title: "Reservatório Custódia/Marrecos", long: -37.596914, lat: -8.076249, local: "Custódia", bacia: "Bacia Hidrográfica Moxotó" }, { categoria: 1, title: "Reservatório Duas Unas", long: -35.039167, lat: -8.092222, local: "Jaboatao", bacia: "Bacia Hidrográfica GL2" }, { categoria: 1, title: "Reservatório Eng. Francisco Saboia/Poço da Cruz", long: -37.705539, lat: -8.508826, local: "Ibimirim", bacia: "Bacia Hidrográfica Moxotó" }, { categoria: 1, title: "Reservatório Entremontes", long: -39.897222, lat: -8.229444, local: "Parnamirim", bacia: "Bacia Hidrográfica Brígida" }, { categoria: 1, title: "Reservatório Goitá", long: -35.115592, lat: -7.969456, local: "Paudalho/S.Lourenco Mata", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 1, title: "Reservatório Gurjão", long: -36.580274, lat: -8.642915, local: "Capoeiras", bacia: "Bacia Hidrográfica Una" }, { categoria: 1, title: "Reservatório Gurjaú", long: -35.05052, lat: -8.236877, local: "Cabo de Santo Agostinho", bacia: "Bacia Hidrográfica GL2" }, { categoria: 1, title: "Reservatório Ingazeira", long: -36.912318, lat: -8.612196, local: "Venturosa", bacia: "Bacia Hidrográfica Ipanema" }, { categoria: 1, title: "Reservatório Inhumas", long: -36.382628, lat: -8.990136, local: "Palmeirina", bacia: "Bacia Hidrográfica Mundaú" }, { categoria: 1, title: "Reservatório Jangadinha", long: -34.977883, lat: -8.090935, local: "Jaboatao", bacia: "Bacia Hidrográfica GL2" }, { categoria: 1, title: "Reservatório Jazigo", long: -38.241641, lat: -7.999635, local: "Serra Talhada", bacia: "Bacia Hidrográfica Pajeú" }, { categoria: 1, title: "Reservatório Jucazinho", long: -35.741389, lat: -7.966389, local: "Surubim/ Cumaru", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 1, title: "Reservatório Lagoa do Barro", long: -40.376111, lat: -7.772778, local: "Araripina", bacia: "Bacia Hidrográfica Brígida" }, { categoria: 1, title: "Reservatório Lopes II", long: -39.935085, lat: -7.872131, local: "Bodocó", bacia: "Bacia Hidrográfica Brígida" }, { categoria: 1, title: "Reservatório Machado", long: -36.269317, lat: -8.000125, local: "Brejo da Madre de Deus", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 1, title: "Reservatório Mulungu", long: -37.130292, lat: -8.631532, local: "Buique", bacia: "Bacia Hidrográfica Ipanema" }, { categoria: 1, title: "Reservatório Mundaú II", long: -36.471141, lat: -8.990338, local: "Garanhuns", bacia: "Bacia Hidrográfica Mundaú" }, { categoria: 1, title: "Reservatório Nilo Coelho", long: -39.373227, lat: -8.227629, local: "Terra Nova", bacia: "Bacia Hidrográfica Terra Nova" }, { categoria: 1, title: "Reservatório Oitis", long: -36.381731, lat: -8.08982, local: "Brejo da Madre de Deus", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 1, title: "Reservatório Palmeirinha/Pedra Fina", long: -35.523419, lat: -7.749109, local: "Bom Jardim", bacia: "Bacia Hidrográfica do rio Goiana" }, { categoria: 1, title: "Reservatório Pau Ferro", long: -36.1199, lat: -8.838285, local: "Quipapá", bacia: "Bacia Hidrográfica Una" }, { categoria: 1, title: "Reservatório Pirapama", long: -35.071675, lat: -8.287928, local: "Cabo de Santo Agostinho", bacia: "Bacia Hidrográfica GL2" }, { categoria: 1, title: "Reservatório Poço Fundo", long: -36.349722, lat: -7.961944, local: "Santa Cruz do Capibaribe", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 1, title: "Reservatório Prata", long: -35.837097, lat: -8.525409, local: "Bonito", bacia: "Bacia Hidrográfica Una" }, { categoria: 1, title: "Reservatório Rosário", long: -37.472101, lat: -7.775739, local: "Iguaraci", bacia: "Bacia Hidrográfica Pajeú" }, { categoria: 1, title: "Reservatório Saco II", long: -40.168137, lat: -8.543143, local: "Santa Maria da Boa Vista", bacia: "Bacia Hidrográfica GL2" }, { categoria: 1, title: "Reservatório Salgueiro", long: -39.060571, lat: -8.029762, local: "Salgueiro", bacia: "Bacia Hidrográfica Terra Nova" }, { categoria: 1, title: "Reservatório São José II", long: -37.294778, lat: -7.476807, local: "Sao Jose do Egito", bacia: "Bacia Hidrográfica Pajeú" }, { categoria: 1, title: "Reservatório Serrinha II", long: -38.533197, lat: -8.208512, local: "Serra Talhada", bacia: "Bacia Hidrográfica Pajeú" }, { categoria: 1, title: "Reservatório Serro Azul", long: -35.669776, lat: -8.587637, local: "Palmares", bacia: "Bacia Hidrográfica Una" }, { categoria: 1, title: "Reservatório Sirigi", long: -35.412053, lat: -7.671722, local: "Vicência", bacia: "Bacia Hidrográfica do rio Goiana" }, { categoria: 1, title: "Reservatório Tabocas/Eng. Gercino Pontes", long: -36.375982, lat: -8.247398, local: "Belo Jardim", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 1, title: "Reservatório Tamboril/Eng. Camacho", long: -40.149722, lat: -7.896389, local: "Ouricuri", bacia: "Bacia Hidrográfica Brígida" }, { categoria: 1, title: "Reservatório Tapacurá", long: -35.162421, lat: -8.037079, local: "São Lourenço da Mata", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 1, title: "Reservatório Taquara", long: -36.044444, lat: -8.303611, local: "Caruaru", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 1, title: "Reservatório Tiúma/Timbaúba", long: -35.345114, lat: -7.511939, local: "Timbaúba", bacia: "Bacia Hidrográfica do rio Goiana" }, { categoria: 1, title: "Reservatório Utinga", long: -35.053056, lat: -8.351667, local: "Ipojuca", bacia: "Bacia Hidrográfica GL2" }, { categoria: 1, title: "Reservatório Pão de açucar", long: "-36.700.494", lat: -827.231, local: "Pesqueira", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 1, title: "Reservatório Várzea do Una", long: -35.12274, lat: -8.029485, local: "São Lourenço da Mata", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 0, title: "Estuário do Rio Ipojuca", long: -34.978408, lat: -8.406767, local: "Ipojuca", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Riacho Arroio Desterro", long: -34.895944, lat: -7.886364, local: "Igarassu", bacia: "Bacia Hidrográfica do rio Timbó" }, { categoria: 0, title: "Riacho dos Macacos", long: -35.159733, lat: -8.283367, local: "Cabo de Santo Agostinho", bacia: "Bacia Hidrográfica GL2" }, { categoria: 0, title: "Rio Beberibe", long: -34.930456, lat: -7.9739, local: "Recife", bacia: "Bacia Hidrográfica do Rio Beberibe" }, { categoria: 0, title: "Rio Beberibe", long: -34.873786, lat: -8.020217, local: "Recife", bacia: "Bacia Hidrográfica do Rio Beberibe" }, { categoria: 0, title: "Rio Bitury", long: -36.434983, lat: -8.282442, local: "Belo Jardim", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Rio Botafogo", long: -34.934458, lat: -7.753833, local: "Igarassu", bacia: "Bacia Hidrográfica GL1" }, { categoria: 0, title: "Rio Capibaribe", long: -35.396992, lat: -7.856094, local: "Limoeiro", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 0, title: "Rio Capibaribe", long: -35.174167, lat: -7.894911, local: "Paudalho", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 0, title: "Rio Capibaribe", long: -35.078047, lat: -7.981631, local: "São Lourenço da Mata", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 0, title: "Rio Capibaribe", long: -35.033447, lat: -7.999353, local: "São Lourenço da Mata", bacia: "Bacia Hidrográfica do rio Capibaribe" }, { categoria: 0, title: "Rio Capibaribe Mirim", long: -35.442333, lat: -7.561683, local: "Macaparana", bacia: "Bacia Hidrográfica do rio Goiana" }, { categoria: 0, title: "Rio Capibaribe Mirim", long: -35.304731, lat: -7.518558, local: "Timbaubá", bacia: "Bacia Hidrográfica do rio Goiana" }, { categoria: 0, title: "Rio Capibaribe Mirim", long: -35.154236, lat: -7.505131, local: "Timbaubá", bacia: "Bacia Hidrográfica do rio Goiana" }, { categoria: 0, title: "Rio Capibaribe Mirim", long: -34.991856, lat: -7.540061, local: "Goiana", bacia: "Bacia Hidrográfica do rio Goiana" }, { categoria: 0, title: "Rio Gurjaú", long: -35.015014, lat: -8.256489, local: "Cabo de Santo Agostinho", bacia: "Bacia Hidrográfica GL2" }, { categoria: 0, title: "Rio Ipojuca", long: -36.423425, lat: -8.386469, local: "Belo Jardim", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Rio Ipojuca", long: -35.935628, lat: -8.287169, local: "Gravatá", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Rio Ipojuca", long: -35.607692, lat: -8.213144, local: "Gravatá", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Rio Ipojuca", long: -35.450072, lat: -8.253322, local: "Chã Grande", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Rio Ipojuca", long: -35.343067, lat: -8.356772, local: "Primavera", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Rio Ipojuca", long: -35.066808, lat: -8.404622, local: "Ipojuca", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Rio Jaboatão", long: -35.200389, lat: -8.138928, local: "São Lourenço da Mata", bacia: "Bacia Hidrográfica GL2" }, { categoria: 0, title: "Rio Jaboatão", long: -35.088561, lat: -8.1205, local: "Moreno", bacia: "Bacia Hidrográfica GL2" }, { categoria: 0, title: "Rio Jaboatão", long: -35.007053, lat: -8.113117, local: "Jaboatão dos Guararapes", bacia: "Bacia Hidrográfica GL2" }, { categoria: 0, title: "Rio Jaboatão", long: -34.964453, lat: -8.174256, local: "Jaboatão dos Guararapes", bacia: "Bacia Hidrográfica GL2" }, { categoria: 0, title: "Rio Panelas", long: -35.840422, lat: -8.618961, local: "Belém de Maria", bacia: "Bacia Hidrográfica Una" }, { categoria: 0, title: "Rio Panelas", long: -35.715528, lat: -8.669425, local: "Catende", bacia: "Bacia Hidrográfica Una" }, { categoria: 0, title: "Rio Paratibe", long: -34.912731, lat: -7.937722, local: "Paulista", bacia: "Bacia Hidrográfica do Rio Paratibe" }, { categoria: 0, title: "Rio Paratibe", long: -34.862492, lat: -7.938139, local: "Paulista", bacia: "Bacia Hidrográfica do Rio Paratibe" }, { categoria: 0, title: "Rio Pirangí", long: -35.814783, lat: -8.748833, local: "Maraial", bacia: "Bacia Hidrográfica Una" }, { categoria: 0, title: "Rio Pirapama", long: -35.265089, lat: -8.242317, local: "Vitória de Santo Antão", bacia: "Bacia Hidrográfica GL2" }, { categoria: 0, title: "Rio Pitanga", long: -35.035406, lat: -7.896467, local: "Abreu e Lima", bacia: "Bacia Hidrográfica GL1" }, { categoria: 0, title: "Rio Sirinhaém", long: -35.656383, lat: -8.419986, local: "Barra de Guabiraba", bacia: "Bacia Hidrogáfica do Rio Sirinhaém" }, { categoria: 0, title: "Rio Sirinhaém", long: -35.393681, lat: -8.565847, local: "Gameleira", bacia: "Bacia Hidrogáfica do Rio Sirinhaém" }, { categoria: 0, title: "Rio Sirinhaém", long: -35.211331, lat: -8.649042, local: "Rio Formoso", bacia: "Bacia Hidrogáfica do Rio Sirinhaém" }, { categoria: 0, title: "Rio Sirinhaém", long: -35.107367, lat: -8.579103, local: "Sirinhaém", bacia: "Bacia Hidrogáfica do Rio Sirinhaém" }, { categoria: 0, title: "Rio Una", long: -35.832481, lat: -8.570394, local: "Belém de Maria", bacia: "Bacia Hidrográfica Una" }, { categoria: 0, title: "Rio Una", long: -35.451114, lat: -8.750153, local: "Água Preta", bacia: "Bacia Hidrográfica Una" }, { categoria: 0, title: "Rio Una", long: -35.183072, lat: -8.812608, local: "Barreiros", bacia: "Bacia Hidrográfica Una" }, { categoria: 0, title: "Rio Utinga", long: -34.925347, lat: -7.870247, local: "Igarassu", bacia: "Bacia Hidrográfica GL2" }, { categoria: 0, title: "Riacho Taboquinha (Afluente do Bitury)", long: -36.44825, lat: -8.303, local: "Belo Jardim", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Riacho Palmeira (Afluente do Bitury)", long: -36.43508, lat: -8.27329, local: "Belo Jardim", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Rio Bitury", long: -36.43431, lat: -8.26716, local: "Belo Jardim", bacia: "Bacia Hidrográfica Ipojuca" }, { categoria: 0, title: "Rio Bitury", long: -36.46269, lat: -8.29813, local: "Belo Jardim", bacia: "Bacia Hidrográfica Ipojuca" }
+                            ];
+
+
+                            Model.forEach((featureData) => {
+                                const feature = {
+                                    categoria: featureData.categoria,
+                                    title: featureData.title,
+                                    long: featureData.long,
+                                    lat: featureData.lat,
+                                    local: featureData.local,
+                                    bacia: featureData.bacia,
+                                };
+
+
+
+                                map.addSource('marker-' + feature.long, {
+                                    'type': 'geojson',
+                                    'data': {
+                                        'type': 'FeatureCollection',
+                                        'features': [{
+                                            'type': 'Feature',
+                                            'geometry': {
+                                                'type': 'Point',
+                                                'coordinates': [feature.long, feature.lat]
+                                            },
+                                            'properties': {
+                                                'title': feature.title,
+                                                'local': feature.local,
+                                                'bacia': feature.bacia,
+                                                'categoria': feature.categoria,
+                                                'lat': feature.lat,
+                                                'long': feature.long
+                                            }
+                                        }]
+                                    }
+                                });
+
+                                const iconImage = feature.categoria === 1 ? 'custom-marker-1' : 'custom-marker-0';
+
+
+
+                                map.addLayer({
+                                    'id': 'marker-' + feature.long,
+                                    'type': 'symbol',
+                                    'source': 'marker-' + feature.long,
+                                    'layout': {
+                                        'icon-image': iconImage,
+                                        'icon-overlap': 'always',
+
+                                        // 'icon-allow-overlap': true,
+                                        // 'text-field': '{title}',
+                                        // 'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+                                        // 'text-offset': [0, 1.25],
+                                        //'text-anchor': 'top'
+                                    }
+
+                                });
+
+                                map.on('mouseenter', 'marker-' + feature.long, function () {
+                                    map.getCanvas().style.cursor = 'pointer';
+                                });
+
+                                map.on('mouseleave', 'marker-' + feature.long, function () {
+                                    map.getCanvas().style.cursor = '';
+                                });
+
+                            });
+                        }
+                    );
+                }
+            );
+
+
+            // When a click event occurs on a feature in the marker layers, open a popup at the
+            // location of the feature, with description HTML from its properties.
+            map.on('click', async function (e) {
+                const features = map.queryRenderedFeatures(e.point);
+
+                if (!features.length) {
+                    return;
+                }
+
+
+
+                const feature = features[0];
+                var coordinates = feature.geometry.coordinates.slice();
+
+                const temperaturaEstimada = await sendinpults(
+                    feature.properties.lat,
+                    feature.properties.long,
+                    feature.properties.categoria
+                );
+                var description = '<p>' +
+                    '<strong>' + feature.properties.title + '</strong><br>' + // Remover 'Title:' e deixar em negrito
+                    'Local: ' + feature.properties.local + '<br>' +
+                    feature.properties.bacia + '<br>' + // Remover 'Bacia:'
+                    '<span style="font-size: 14px;">Temperatura Estimada: <strong style="font-size: 16px;">' + temperaturaEstimada + '</strong></span>' + // Alterar fonte para temperatura estimada
+                    '</p>';
+
+
+                // Ensure that if the map is zoomed out such that multiple
+                // copies of the feature are visible, the popup appears
+                // over the copy being pointed to.
+                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                }
+
+                new maptilersdk.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(description)
+                    .addTo(map);
+            });
+
+
+
+
+        });
+
+
+
+    </script>
+</body>
+
+</html>
